@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.21/angular.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" media="screen" />
+  <script type="text/javascript" src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  <style>
+    .avatar{
+      width:250px;
+      height:250px;
+    }
+  </style>
+</head>
+<body>
+  <center>
+  <div ng-app=""  ng-controller="test_controller">
+    <p>Enter the profile of the user you want to look up:<p>
+    <input type="text"  ng-model="name" />
+    <h1>{{ name }}</h1>
+    <button ng-click="getAccountInfo()" class="btn btn-default">List Information</button>
+    <div ng-if="show_account_info === true">
+        <img ng-src="{{avatar_url}}" class="avatar" />
+        <p>Name: {{account.name}}</p>
+        <p>Company:{{account.company}}</p>
+        <p>Location:{{account.location}}</p>
+        <p>Email:{{account.email}}<p>
+        <p>Bio:{{account.bio}}</p>
+        <p>Followers:{{account.followers}}</p>
+        <p>Following:{{account.following}}</p>
+        <div class="btn-group">
+          <button type="button" class="btn btn-default" ng-click="getAccountRepos()">View Repos</button>
+          <button type="button" class="btn btn-default" ng-click="getAccountGists()">View Gists</button>
+        </div>
+    </div>
+    <br/>
+    <br/>
+    <div ng-if="show_repos === true">
+        <div ng-repeat="repo in repos" style="max-width:400px;">
+          <div>Name: {{repo.name}}</div>
+          <div>Description: {{repo.description}}</div>
+          <div>Url: <a href="{{repo.html_url}}">{{repo.html_url}}</a></div>
+          <div>Owner: {{repo.owner.login}}</div>
+          <div>Clone url: <a href="{{repo.clone_url}}">{{repo.clone_url}}</a></div>
+          <div>Watchers: {{repo.watchers}}</div>
+          <br/>
+          <br/>
+        </div>
+    </div>
+
+    <div ng-if="show_gists === true">
+        <div ng-repeat="gist in gists" style="max-width:400px;">
+          <div>Description: {{gist.description}}</div>
+          <div>Url: <a href="{{gist.html_url}}">{{gist.html_url}}</a></div>
+          <div>Owner: {{gist.owner.login}}</div>
+          <div>Pull url: <a href="{{gist.git_pull_url}}">{{gist.git_pull_url}}</a></div>
+          <br/>
+          <br/>
+        </div>
+    </div>
+  </div>
+</center>
+</body>
+  <script>
+  function test_controller($scope, $http) {
+    $scope.name = "";
+    $scope.show_account_info = false;
+    $scope.show_repos = false;
+    $scope.show_gists = false;
+    //style="url('https://avatars.githubusercontent.com/u/4281340?v=2');width:250px;height:250px;background-size: contain;"
+    $scope.avatar_url = "2";
+
+    $scope.getAccountInfo =  function()
+    {
+      $http({method: 'GET', url: 'https://api.github.com/users/' + $scope.name}).
+      success(function(data, status, headers, config) {
+        $scope.show_account_info = true;
+        console.log(data);
+        $scope.account = angular.fromJson(data);
+        $scope.avatar_url = $scope.account.avatar_url + '';
+        console.log($scope.avatar_url);
+      }).
+      error(function(data, status, headers, config) {
+        console.log("Well, shiet!");
+        alert("No such user");
+      });
+    }
+
+    $scope.getAccountRepos = function()
+                             {
+                               console.log("Getting Repositories");
+                               $scope.show_repos = true;
+                               $scope.show_gists = false;
+                               $http({method: 'GET', url: 'https://api.github.com/users/' + $scope.name + '/repos'}).
+                               success(function(data, status, headers, config) {
+                                 $scope.show_account_info = true;
+                                 console.log(data);
+                                 $scope.repos = angular.fromJson(data);
+                               }).
+                               error(function(data, status, headers, config) {
+                                 console.log("Well, shiet!");
+
+                               });
+                             }
+    $scope.getAccountGists = function()
+                             {
+                               console.log("Getting Gists");
+                               $scope.show_repos = false;
+                               $scope.show_gists = true;
+                               $http({method: 'GET', url: 'https://api.github.com/users/' + $scope.name  + '/gists'}).
+                               success(function(data, status, headers, config) {
+                                 $scope.show_account_info = true;
+                                 console.log(data);
+                                 $scope.gists = angular.fromJson(data);
+                                 $scope.avatar_url = $scope.account.avatar_url + '';
+                                 console.log($scope.avatar_url);
+                               }).
+                               error(function(data, status, headers, config) {
+                                 console.log("Well, shiet!");
+                               });
+                             }
+}
+  </script>
+</html>
