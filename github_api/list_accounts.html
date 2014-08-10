@@ -72,6 +72,8 @@
 
     $scope.getAccountInfo =  function()
     {
+      $scope.show_repos = false;
+      $scope.show_gists = false;
       $http({method: 'GET', url: 'https://api.github.com/users/' + $scope.name}).
       success(function(data, status, headers, config) {
         $scope.show_account_info = true;
