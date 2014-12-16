@@ -38,10 +38,19 @@ sub Main()
                             order by order_by asc;");
     $sth->execute();
     my @tables = ();
-    @tables[$sth->rows()];
+    #@tables[$sth->rows()];
     my @relation_graph = ();
+    for (my $j = 0; $j < 5; $j++)
+    {
+        push(@relation_graph, [0]);
+        for(my $k = 0; $k < 5 -1; $k++)
+        {
+            push(@{$relation_graph[$j]}, 0);
+        }
+    }
+    #print Dumper(@relation_graph);
     my $i = 0;
-    print "Number of rows is: ", $sth->rows();
+    #print "Number of rows is: ", $sth->rows();
 
     while(my $row = $sth->fetchrow_hashref())
     {
@@ -53,26 +62,38 @@ sub Main()
         elsif($$row{order_by} == 100)
         {
             # find base table
+            #print Dumper(@tables);
             for my $node (@tables)
             {
-                print $$node{id}, "\n\n";
-                if(index($str, "$$node{table_name}_") != -1)
+                #print Dumper($node);
+                #print "The current constraint name is: $$row{constraint_name} \n";
+                for my $node2 (@tables)
                 {
+                    if(index($$row{constraint_name}, "$$node{name}_$$node2{name}_id") != -1)
+                    {
+                        #print "There is a hit constraint name: $$row{constraint_name}, node1: $$node{name}, node2: $$node2{name}\n";
+                        my $main_table_id = -1;
+                        my $foreign_table_id = -1;
+                        for (my $k = 0; $k < scalar(@tables); $k++)
+                        {
+                            if($tables[$k]{name} eq $$node{name})
+                            {
+                                $main_table_id = $tables[$k]{id};
+                            }
 
-                }
-                elsif(index($str, "_$$node{table_name}"))
-                {
-
+                            if($tables[$k]{name} eq $$node2{name})
+                            {
+                                $foreign_table_id = $tables[$k]{id};
+                            }
+                        }
+                        $relation_graph[$main_table_id][$foreign_table_id] = 1;
+                        #print "The id of the main table is: $main_table_id, the id of the foreign table is $foreign_table_id \n";
+                    }
                 }
             }
-            # find point to table
-            # insert into
         }
     }
-    for (my $j = 0; $j < scalar(@tables); $j++)
-    {
-#        print $j, "   ", $tables[$j]{id}, "\n";
-    }
+    print "Dumping the relation graph: ", Dumper(@relation_graph);
 }
 
 Main();
