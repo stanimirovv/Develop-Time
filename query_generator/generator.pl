@@ -1,5 +1,5 @@
 use strict;
-use warnings;
+#use warnings;
 use DBI;
 use Data::Dumper;
 
@@ -8,9 +8,30 @@ sub BuildRelationGraph($)
     my ($dbh) = @_;
 }
 
-sub FindPath($$$)
+my @paths = (0, 0, 0, 0, 0, 0, 0);
+
+sub FindPath
 {
-    my ($from, $to, $graph)
+    my ($from, $to, @relation_graph) = @_;
+
+    #print "Entering FindPath from:$from to:$to\n";
+    print "currently in: $from\n";
+    if($from == $to)
+    {
+        print "Finally in $to\n";
+
+        return;
+    }
+    for (my $i = 0; $i< @{$relation_graph[$from]}; $i++)
+    {
+        if($relation_graph[$from][$i] > 0)
+        {
+            #print "starting search from $i";
+            $paths[$from] = $i;
+            return FindPath($i, $to, @relation_graph);
+        }
+    }
+
 }
 
 sub FetchNewNode(;$$$)
@@ -94,6 +115,24 @@ sub Main()
         }
     }
     print "Dumping the relation graph: ", Dumper(@relation_graph);
+    my $start = "a";
+    my $end = "c";
+    my $start_id = -1;
+    my $end_id = -1;
+    for my $node (@tables)
+    {
+        if($$node{name} eq $start)
+        {
+            $start_id = $$node{id};
+        }
+
+        if($$node{name} eq $end)
+        {
+            $end_id = $$node{id};
+        }
+    }
+    FindPath($start_id, $end_id, @relation_graph);
+    print Dumper(@paths);
 }
 
 Main();
