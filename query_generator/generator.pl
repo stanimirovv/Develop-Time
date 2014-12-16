@@ -12,23 +12,27 @@ my @paths = (0, 0, 0, 0, 0, 0, 0);
 
 sub FindPath
 {
-    my ($from, $to, @relation_graph) = @_;
+    my ($from, $to, @relation_graph, $curr_depth) = @_;
+
 
     #print "Entering FindPath from:$from to:$to\n";
     print "currently in: $from\n";
     if($from == $to)
     {
         print "Finally in $to\n";
-
         return;
     }
     for (my $i = 0; $i< @{$relation_graph[$from]}; $i++)
     {
         if($relation_graph[$from][$i] > 0)
         {
+            $curr_depth++;
             #print "starting search from $i";
-            $paths[$from] = $i;
-            return FindPath($i, $to, @relation_graph);
+            FindPath($i, $to, @relation_graph, $curr_depth);
+        }
+        else
+        {
+            #pop as much as curr_depth is.
         }
     }
 
