@@ -96,10 +96,10 @@ sub BuildRelationGraph($)
 sub FindPath($$$)
 {
     my ($self, $start, $end) = @_;
-
+ 
     my $start_id = -1;
     my $end_id = -1;
-
+ 
     my @tables = @{$$self{tables}};
     for my $node (@tables)
     {
@@ -107,16 +107,23 @@ sub FindPath($$$)
         {
             $start_id = $$node{id};
         }
-
+ 
         if($$node{name} eq $end)
         {
             $end_id = $$node{id};
         }
     }
-
-    my $path = $self->FindPathHelper($start_id, $end_id);
-    $path = $start_id.",".$path;
-    my @true_path  = split(',', $path);
+ 
+    my @arr_path;
+ 
+    my $path = $self->FindPathHelper($start_id, $end_id, \@arr_path);
+    push @arr_path, $start_id;
+ 
+    #$path = $start_id.",".$path;
+    #my @true_path  = split(',', $path);
+ 
+    my @true_path = reverse @arr_path;
+ 
     return @true_path;
 }
 
@@ -125,25 +132,27 @@ This function is the brain behind the FindPath function and does most of the wor
 =cut
 sub FindPathHelper
 {
-    my ($self, $from, $to) = @_;
-
+    my ($self, $from, $to, $arr_path) = @_;
+ 
     for (my $i = 0; $i < @{$$self{relation_graph}[$from]}; $i++)
     {
-
+ 
         if($$self{relation_graph}[$from][$i] == 0){
             next;
         }
-
+ 
         if($i == $to)
         {
             print "Finally in $to\n";
+            push @$arr_path, $i;
             return $i;
         }
-
+ 
         #print "starting search from $i";
-        my $pth = $self->FindPathHelper($i, $to);
+        my $pth = $self->FindPathHelper($i, $to, $arr_path);
         if($pth ne "false")
         {
+            push @$arr_path, $i;
             return $i.",".$pth;
         }
     }
