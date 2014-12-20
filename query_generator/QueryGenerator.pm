@@ -51,6 +51,7 @@ sub BuildRelationGraph($)
     my $i = 0;
     while(my $row = $sth->fetchrow_hashref())
     {
+
         if($$row{order_by} == 1)
         {
             push(@tables, FetchNewNode($i, $$row{table_name}));
@@ -60,6 +61,11 @@ sub BuildRelationGraph($)
         {
             for my $node (@tables)
             {
+                if(index($$row{constraint_name}, "__nn") == -1)
+                {
+                        $$node{is_ljoin} = 1;
+                }
+
                 for my $node2 (@tables)
                 {
                     if(index($$row{constraint_name}, "$$node{name}_$$node2{name}_id") != -1)
@@ -96,10 +102,10 @@ sub BuildRelationGraph($)
 sub FindPath($$$)
 {
     my ($self, $start, $end) = @_;
- 
+
     my $start_id = -1;
     my $end_id = -1;
- 
+
     my @tables = @{$$self{tables}};
     for my $node (@tables)
     {
@@ -107,23 +113,23 @@ sub FindPath($$$)
         {
             $start_id = $$node{id};
         }
- 
+
         if($$node{name} eq $end)
         {
             $end_id = $$node{id};
         }
     }
- 
+
     my @arr_path;
- 
+
     my $path = $self->FindPathHelper($start_id, $end_id, \@arr_path);
     push @arr_path, $start_id;
- 
+
     #$path = $start_id.",".$path;
     #my @true_path  = split(',', $path);
- 
+
     my @true_path = reverse @arr_path;
- 
+
     return @true_path;
 }
 
@@ -133,21 +139,21 @@ This function is the brain behind the FindPath function and does most of the wor
 sub FindPathHelper
 {
     my ($self, $from, $to, $arr_path) = @_;
- 
+
     for (my $i = 0; $i < @{$$self{relation_graph}[$from]}; $i++)
     {
- 
+
         if($$self{relation_graph}[$from][$i] == 0){
             next;
         }
- 
+
         if($i == $to)
         {
             print "Finally in $to\n";
             push @$arr_path, $i;
             return $i;
         }
- 
+
         #print "starting search from $i";
         my $pth = $self->FindPathHelper($i, $to, $arr_path);
         if($pth ne "false")
@@ -171,7 +177,13 @@ sub BuildQuerry($$)
     my $query = "SELECT * FROM $$self{tables}[$path[0]]{name}";
     for (my $i = 1; $i < scalar(@path); $i++)
     {
-        $query .= " JOIN $$self{tables}[$path[$i]]{name} ON $$self{tables}[$path[$i-1]]{name}.$$self{tables}[$path[$i]]{name}_id__nn = $$self{tables}[$path[$i]]{name}.id";
+        my $is_leftj = "";
+        if($$self{tables}[$path[$i-1]]{is_ljoin})
+        {
+            $is_leftj = "LEFT";
+            $$self{tables}[$path[$i]]{is_ljoin} = 1;
+        }
+        $query .= "  $is_leftj JOIN $$self{tables}[$path[$i]]{name} ON $$self{tables}[$path[$i-1]]{name}.$$self{tables}[$path[$i]]{name}_id__nn = $$self{tables}[$path[$i]]{name}.id";
     }
     $query .= ";";
 

@@ -23,7 +23,7 @@ CREATE TABLE b(
 
 CREATE TABLE a(
     id SERIAL PRIMARY KEY,
-    b_id__nn INT REFERENCES b NOT NULL
+    b_id__nn INT REFERENCES b
 );
 
 insert into e values(1);
